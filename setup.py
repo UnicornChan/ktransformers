@@ -6,7 +6,7 @@ Author       : chenxl
 Date         : 2024-07-27 16:15:27
 Version      : 1.0.0
 LastEditors  : chenxl 
-LastEditTime : 2024-07-29 09:40:24
+LastEditTime : 2024-07-30 16:06:00
 Adapted from:
 https://github.com/Dao-AILab/flash-attention/blob/v2.6.3/setup.py
 Copyright (c) 2023, Tri Dao.
@@ -19,6 +19,7 @@ import re
 import ast
 import subprocess
 import platform
+import http.client
 import urllib.request
 import urllib.error
 from pathlib import Path
@@ -95,6 +96,8 @@ class VersionInfo:
     def get_package_version(self, full_version=False):
         flash_version = self.get_flash_version()
         package_version = f"{str(flash_version)}+cu{self.get_cuda_bare_metal_version(CUDA_HOME)}torch{self.get_torch_version()}{self.get_cpu_instruct()}"
+        with open("version.txt", "w", encoding="utf-8") as vf:
+            vf.write(package_version)
         if full_version:
             return package_version
         if not VersionInfo.FORCE_BUILD:
@@ -132,7 +135,7 @@ class BuildWheelsCommand(_bdist_wheel):
             wheel_path = os.path.join(self.dist_dir, archive_basename + ".whl")
             print("Raw wheel path", wheel_path)
             os.rename(wheel_filename, wheel_path)
-        except (urllib.error.HTTPError, urllib.error.URLError):
+        except (urllib.error.HTTPError, urllib.error.URLError, http.client.RemoteDisconnected):
             print("Precompiled wheel not found. Building from source...")
             # If the wheel could not be downloaded, build from source
             super().run()
